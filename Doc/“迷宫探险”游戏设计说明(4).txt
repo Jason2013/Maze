@@ -1,0 +1,156 @@
+
+                   “迷宫探险”游戏设计详细说明(1)
+
+     __________________________________________________
+     |                                                |__☆★
+     |                      陈畅                     | |_
+     |   http://shchenchang.spaces.live.com           | ||
+     |    编程软件，我的原创作品(含源码和详细说明)    | ||
+     |          mail:shchenchang@gmail.com            | ||
+     |_______QQ:7019717(欢迎编程爱好者加我为好友)_____| ||
+       |________________________________________________||
+     ☆☆|_______________________________________________|
+
+
+
+
+关于“迷宫探险”程序的一些问题：
+******************************************************
+
+Turbo C 中怎样设置图形显示？
+Turbo C 中常用图形函数的用法？
+怎样获取鍵盘输入？
+迷宫的数据表示法？
+怎样随机生成一个从入口至出口只有唯一通路的迷宫？
+你是怎样知道生成的迷宫从入口至出口肯定只有唯一通路的？
+入口和出口必须在左上角和右下角吗？
+迷宫通路的数据表示法？
+怎样才能找到从入口到出口的那条唯一通路？
+对我程序的注解。
+
+******************************************************
+
+
+■对我程序的注解(一)
+
+我的程序是用C++写的，因此明白了里边几个类和结构的作用，整个程序就不难理
+解了。
+
+☆图形类Graph，实际上是为了简化设置图形模式而设的。
+class Graph
+{
+public:
+	Graph();   /* 图形模式初始化 */
+	~Graph();  /* 关闭图表模式，恢复文本模式 */
+};
+这个Graph类仅定义了一个全局实例G。
+
+☆表示方向的枚举类型direction：
+enum direction {west,north,east,south};
+
+☆用来表示坐标的类Point：
+class Point
+{
+public:
+	int x,y;       /* 横、纵坐标 */
+	Point();       /* default constructor */
+	~Point(){}     /* destructor */
+	Point(int,int);  /* constructor */
+	Point & operator=(const Point &);     /* 赋值运算符重载 */
+};
+
+☆一个可以动态申请内存的二维数组类TwoDimensionArray：
+class TwoDimensionArray
+{
+private:
+	int width,height;        /* 二维数组的宽度和高度 */
+	int **pM,*spM;           /* 指向动态申请的内存的指针 */
+	void Clear();            /* 释放动态申请的内存 */
+public:
+	TwoDimensionArray();            /* default constructor */
+	TwoDimensionArray(int,int);     /* destructor */
+	~TwoDimensionArray();           /* destructor */
+	int SetSize(int,int);           /* 设置二维数组的宽度和高度 */ 
+	int Get(int x,int y) const;         /* 得到二维数组(x,y)处的值 */
+	int Set(int x,int y,int v);         /* 设置二维数组(x,y)处的值为v */
+	int GetWidth() const {return width;}   /* 得到二维数组的宽度 */
+	int GetHeight() const {return height;} /* 得到二维数组的高度 */
+};
+二维数组在程序中多次用到。
+
+☆迷宫类Maze。这个类是最复杂的，也是本程序的核心。
+class Maze
+{
+private:
+	int width,height;   /* 迷宫的宽度和高度 */
+	Point start,end;    /* 迷宫的起点和终点 */
+
+	/* 表示迷宫和路线的二维数组 */
+	TwoDimensionArray maze,path;
+
+	/* 判断在位置p处的格子是否可以向dir方向延伸 */
+	int ExtendableInDir(
+		const TwoDimensionArray & m,
+		const Point & p,
+		direction dir);
+	
+	/* 判断在位置p处的格子是否可以延伸 */
+	int Extendable(const TwoDimensionArray &,const Point &);
+
+	/* 在迷宫中“可延伸格子”中，随机选一个格子 */
+	Point FindExtendablePosition(const TwoDimensionArray &);
+
+	/* 在向左、上、右、下可延伸的方向中随机选一个方向 */
+	direction RandDirection(int,int,int,int);
+
+	/* 根据迷宫的宽度和高度，随机生成一个新迷宫 */
+	void GenerateMaze();
+
+	/* 生成迷宫从入口到出口的路线 */
+	void GeneratePath();
+
+	/* 用深度优先算法探路 */
+	void DetectPath(TwoDimensionArray &,Point &,int &);
+
+public:
+	Maze();         /* default constructor */
+	Maze(int,int);  /* constructor */
+	int SetSize(int,int);           /* 设置迷宫的宽度和高度 */
+	void SetStart(const Point &);   /* 设置迷宫的起点 */
+	void SetEnd(const Point &);     /* 设置迷宫的终点 */
+	const Point & GetStart() const; /* 返回迷宫的起点 */
+	const Point & GetEnd() const;   /* 返回迷宫的终点 */
+
+	int GetMaze(int x,int y) const;      /* 返回迷宫中(x,y)格子的状态 */
+	int GetPath(int x,int y) const;      /* 返回路线数组中(x,y)处的值 */
+	int GetWidth() const{return width;}  /* 返回迷宫的宽度 */
+	int GetHeight()const{return height;} /* 返回迷宫的宽度 */
+};
+
+☆下面是几个全局函数：
+
+/* 绘制界面 */
+void Draw()
+
+/* 绘制迷宫的宽度和高度 */
+void DrawSize(int width,int height)
+
+/* 绘制迷宫m */
+void DrawMaze(const Maze & m)
+
+/* 绘制迷宫m的正确路线 */
+void DrawPath(const Maze & m)
+
+/* 在迷宫m的位置p处向方向dir走一步
+   tr为走过的路线标记
+   新走过的路和回头路用不同的颜色标记 */
+int TraceMaze(
+	TwoDimensionArray & tr,
+	Point & cur,
+	const Maze & m,
+	direction dir)
+
+
+
+<未完>
+

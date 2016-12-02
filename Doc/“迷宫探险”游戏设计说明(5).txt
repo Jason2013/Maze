@@ -1,0 +1,145 @@
+
+                   “迷宫探险”游戏设计详细说明(1)
+
+     __________________________________________________
+     |                                                |__☆★
+     |                      陈畅                     | |_
+     |   http://shchenchang.spaces.live.com           | ||
+     |    编程软件，我的原创作品(含源码和详细说明)    | ||
+     |          mail:shchenchang@gmail.com            | ||
+     |_______QQ:7019717(欢迎编程爱好者加我为好友)_____| ||
+       |________________________________________________||
+     ☆☆|_______________________________________________|
+
+
+
+
+关于“迷宫探险”程序的一些问题：
+******************************************************
+
+Turbo C 中怎样设置图形显示？
+Turbo C 中常用图形函数的用法？
+怎样获取鍵盘输入？
+迷宫的数据表示法？
+怎样随机生成一个从入口至出口只有唯一通路的迷宫？
+你是怎样知道生成的迷宫从入口至出口肯定只有唯一通路的？
+入口和出口必须在左上角和右下角吗？
+迷宫通路的数据表示法？
+怎样才能找到从入口到出口的那条唯一通路？
+对我程序的注解。
+
+******************************************************
+
+
+■对我程序的注解(二)
+
+☆主函数很短，我就把它贴在下边，来个全解吧。
+int main(void)
+{
+	/* mazewidth和mazeheight为新迷宫的宽度和高度 */
+	/* success标记玩家是否到达迷宫终点 */
+	int mazewidth=8,mazeheight=6,success=0;
+	
+	/* oldw和oldh表示迷宫原有的大小 */
+	int oldw,oldh;
+
+	/* 随机初始化 */
+	randomize();
+
+	/* trace记录玩家在迷宫中走过的路线 */
+	TwoDimensionArray trace(mazewidth,mazeheight);
+
+	/* cur记录玩家在迷宫中的位置 */
+	Point cur(0,0);
+
+	/* 新建一个迷宫 */
+	Maze m(mazewidth,mazeheight);
+
+	int i,j,key;
+
+	/* 设置玩家在迷宫的左上角(起点) */
+	trace.Set(0,0,1);
+	
+	/* 绘制界面 */
+	Draw();
+
+	/* 绘制迷宫 */
+	DrawMaze(m);
+
+	/* 绘制迷宫的宽高 */
+	DrawSize(m.GetWidth(),m.GetHeight());
+
+	for(;;)
+	{
+		oldw=mazewidth;        /* 记录迷宫原来的宽度 */
+		oldh=mazeheight;       /* 记录迷宫原来的高度 */
+		while (bioskey(1)==0); /* 等待按键 */
+		key=bioskey(0);        /* 获取按键 */
+		switch(key)
+		{
+		case ESC:              /* Escape 键退出游戏 */
+			goto exit;
+		case F1:               /* F1 显示迷宫路线 */
+			DrawPath(m);
+			break;
+		case F2:               /* F2 键按当前宽、高生成新迷宫 */
+			m.SetSize(mazewidth,mazeheight);
+		case F3:               /* F3 键绘制迷宫 */
+			DrawMaze(m);
+
+			 /* 玩家走过的路线归位 */
+			trace.SetSize(mazewidth,mazeheight);
+
+			/* 玩家回到迷宫左上角(起点) */
+			trace.Set(0,0,1); 
+
+			/* 玩家位置回到迷宫左上角(起点) */
+			cur.x=0;
+			cur.y=0;
+
+			/* 标记玩家没有到达迷宫终点 */
+			success=0;
+			break;
+		case HOME:             /* HOME 键迷宫宽度减1 */
+			if (mazewidth>2) mazewidth--;
+			break;
+		case END:              /* HOME 键迷宫宽度加1 */
+			if (mazewidth<MAZE_MAX_WIDTH) mazewidth++;
+			break;
+		case PAGEUP:           /* PAGEUP 键迷宫高度减1 */
+			if (mazeheight>2) mazeheight--;
+			break;
+		case PGDOWN:           /* PAGEDOWN 键迷宫高度加1 */
+			if (mazeheight<MAZE_MAX_HEIGHT) mazeheight++;
+			break;
+		case LEFTKEY:          /* 玩家在迷宫中向左走一步 */
+			if (!success)
+				success=TraceMaze(trace,cur,m,west);
+			break;
+		case UPKEY:            /* 玩家在迷宫中向上走一步 */
+			if (!success)
+				success=TraceMaze(trace,cur,m,north);
+			break;
+		case RIGHTKEY:         /* 玩家在迷宫中向右走一步 */
+			if (!success)
+				success=TraceMaze(trace,cur,m,east);
+			break;
+		case DOWNKEY:          /* 玩家在迷宫中向下走一步 */
+			if (!success)
+				success=TraceMaze(trace,cur,m,south);
+			break;
+		}
+
+		/* 如果迷宫大小被改变，重绘迷宫大小 */
+		if (oldw!=mazewidth||oldh!=mazeheight)
+			DrawSize(mazewidth,mazeheight);
+	}
+	exit:
+
+	return 0;
+}
+
+
+
+<未完>
+
